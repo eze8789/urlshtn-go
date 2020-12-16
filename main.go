@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-
 	"github.com/eze8789/urlshtn-go/pkg/config"
 	"github.com/eze8789/urlshtn-go/pkg/database/postgres"
 	"github.com/sirupsen/logrus"
@@ -18,13 +17,16 @@ func main() {
 	}
 	// TODO Remove print statements
 	fmt.Println(cfg.Postgres.Port)
-	pgConn, err := postgres.NewConn(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Username, cfg.Postgres.Password, cfg.Postgres.Database, cfg.Postgres.SSLMode)
+	pgConn, err := postgres.NewConn(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Username, cfg.Postgres.Password,
+		cfg.Postgres.Database, cfg.Postgres.SSLMode)
 	if err != nil {
 		logrus.Fatalf("could not establish connection: %v", err)
 	}
-	fmt.Printf("Connection established to Postgres Database: %v", pgConn)
+	defer pgConn.DB.Close()
 
-
-
+	err = pgConn.CreateTable("./configs/sql/create_url_shortener.sql")
+	if err != nil {
+		logrus.Fatalf("could not create database: %v", err)
+	}
 
 }

@@ -3,12 +3,12 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-
 	_ "github.com/lib/pq"
+	"io/ioutil"
 )
 
 type postgres struct {
-	db *sql.DB
+	DB *sql.DB
 }
 
 func NewConn(host, port, username, password, database, ssloption string) (*postgres, error) {
@@ -18,7 +18,6 @@ func NewConn(host, port, username, password, database, ssloption string) (*postg
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
@@ -28,4 +27,26 @@ func NewConn(host, port, username, password, database, ssloption string) (*postg
 	return &postgres{db}, nil
 }
 
-func (d *postgres) CreateTable(filepath string) {}
+func (d *postgres) CreateTable(filepath string) error {
+	f, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return err
+	}
+
+	_, err = d.DB.Exec(string(f))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *postgres) Insert(u string) (int, error) {
+	stmt := `INSERT INTO url_shortener(url_address) VALUES($1) RETURNING url_id;`
+	var id int
+
+	err := d.DB.QueryRow(stmt, u).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
+}

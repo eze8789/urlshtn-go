@@ -1,0 +1,1 @@
+CREATE TABLE if not exists url_shortener (url_id INT GENERATED ALWAYS AS IDENTITY, url_address VARCHAR NOT NULL, visit_counts INT default 0)
