@@ -26,7 +26,7 @@ func main() {
 
 	err = pgConn.CreateTable("./configs/sql/create_url_shortener.sql")
 	if err != nil {
-		logrus.Fatalf("could not create database: %v", err)
+		logrus.Fatalf("could not create table: %v", err)
 	}
 
 }
