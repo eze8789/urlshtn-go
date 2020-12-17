@@ -6,6 +6,7 @@ import (
 	"github.com/eze8789/urlshtn-go/pkg/database/models"
 	_ "github.com/lib/pq"
 	"io/ioutil"
+	"strings"
 )
 
 type postgres struct {
@@ -43,8 +44,11 @@ func (d *postgres) CreateTable(filepath string) error {
 
 func (d *postgres) Insert(u string) (int, error) {
 	stmt := `INSERT INTO url_shortener(url_address) VALUES($1) RETURNING url_id;`
-	var id int
+	if !strings.Contains(u, "https://") {
+		u = "https://" + u
+	}
 
+	var id int
 	err := d.DB.QueryRow(stmt, u).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -52,14 +56,42 @@ func (d *postgres) Insert(u string) (int, error) {
 	return id, nil
 }
 
-// TODO List all
-func (d *postgres) List() ([]*models.UrlShort, error) {return nil, nil}
+func (d *postgres) List() ([]*models.UrlShort, error) {
+	stmt := `SELECT * FROM url_shortener;`
+	rows, err := d.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-// TODO List all urls
-func (d *postgres) ListUrls() ([]string, error) {return nil, nil}
+	var urls []*models.UrlShort
+	for rows.Next() {
+		url := &models.UrlShort{}
+		err = rows.Scan(&url.ID, &url.URLAddress, &url.VisitCounts)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, url)
+	}
 
-// TODO Retrieve one record
-func (d *postgres) Retrieve(u string) (*models.UrlShort, error) {return nil, nil}
+	return urls, nil
+}
+
+func (d *postgres) Retrieve(u string) (*models.UrlShort, error) {
+	stmt := `SELECT * FROM url_shortener WHERE url_address=$1;`
+	row := d.DB.QueryRow(stmt, u)
+	url := models.UrlShort{}
+
+	err := row.Scan(&url.ID, &url.URLAddress, &url.VisitCounts)
+	if err == sql.ErrNoRows {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &url, nil
+}
 
 //TODO Update visit counts when visited
 func (d *postgres) Update(enc string) error {return nil}
