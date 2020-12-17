@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"github.com/eze8789/urlshtn-go/pkg/database/models"
 	_ "github.com/lib/pq"
 	"io/ioutil"
 )
@@ -50,3 +51,15 @@ func (d *postgres) Insert(u string) (int, error) {
 	}
 	return id, nil
 }
+
+// TODO List all
+func (d *postgres) List() ([]*models.UrlShort, error) {return nil, nil}
+
+// TODO List all urls
+func (d *postgres) ListUrls() ([]string, error) {return nil, nil}
+
+// TODO Retrieve one record
+func (d *postgres) Retrieve(u string) (*models.UrlShort, error) {return nil, nil}
+
+//TODO Update visit counts when visited
+func (d *postgres) Update(enc string) error {return nil}
