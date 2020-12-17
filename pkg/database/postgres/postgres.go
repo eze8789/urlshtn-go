@@ -25,16 +25,20 @@ func NewConn(host, port, username, password, database, ssloption string) (*postg
 		return nil, err
 	}
 
+	err = createTable(db, "./configs/sql/create_url_shortener.sql")
+	if err != nil {
+		return nil, err
+	}
 	return &postgres{db}, nil
 }
 
-func (d *postgres) CreateTable(filepath string) error {
+func createTable(db *sql.DB, filepath string) error {
 	f, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return err
 	}
 
-	_, err = d.DB.Exec(string(f))
+	_, err = db.Exec(string(f))
 	if err != nil {
 		return err
 	}
