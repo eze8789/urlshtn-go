@@ -3,19 +3,25 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/eze8789/urlshtn-go/pkg/database/models"
-	_ "github.com/lib/pq"
+
 	"io/ioutil"
 	"strings"
+
+	// Import to open DB Connection here
+	_ "github.com/lib/pq"
 )
 
-type postgres struct {
+// Postgres give access to the db struct to execute methods in the handlers
+type Postgres struct {
 	DB *sql.DB
 }
 
-func NewConn(host, port, username, password, database, ssloption string) (*postgres, error) {
+// NewConn establish connection against a postgres DB
+func NewConn(host, port, username, password, database, ssloption string) (*Postgres, error) {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-				host, port, username, password, database, ssloption)
+		host, port, username, password, database, ssloption)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
@@ -30,7 +36,7 @@ func NewConn(host, port, username, password, database, ssloption string) (*postg
 	if err != nil {
 		return nil, err
 	}
-	return &postgres{db}, nil
+	return &Postgres{db}, nil
 }
 
 func createTable(db *sql.DB, filepath string) error {
@@ -46,7 +52,8 @@ func createTable(db *sql.DB, filepath string) error {
 	return nil
 }
 
-func (d *postgres) Insert(u string) (int, error) {
+// Insert a record in the DB
+func (d *Postgres) Insert(u string) (int, error) {
 	stmt := `INSERT INTO url_shortener(url_address) VALUES($1) RETURNING url_id;`
 	if !strings.Contains(u, "https://") {
 		u = "https://" + u
@@ -60,17 +67,21 @@ func (d *postgres) Insert(u string) (int, error) {
 	return id, nil
 }
 
-func (d *postgres) List() ([]*models.UrlShort, error) {
+// List return a slice of UrlShort struct
+func (d *Postgres) List() ([]*models.URLShort, error) {
 	stmt := `SELECT * FROM url_shortener;`
 	rows, err := d.DB.Query(stmt)
+	if err == rows.Err() {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var urls []*models.UrlShort
+	var urls []*models.URLShort
 	for rows.Next() {
-		url := &models.UrlShort{}
+		url := &models.URLShort{}
 		err = rows.Scan(&url.ID, &url.URLAddress, &url.VisitCounts)
 		if err != nil {
 			return nil, err
@@ -81,10 +92,11 @@ func (d *postgres) List() ([]*models.UrlShort, error) {
 	return urls, nil
 }
 
-func (d *postgres) Retrieve(u string) (*models.UrlShort, error) {
+// Retrieve return a record from the DB
+func (d *Postgres) Retrieve(u string) (*models.URLShort, error) {
 	stmt := `SELECT * FROM url_shortener WHERE url_address=$1;`
 	row := d.DB.QueryRow(stmt, u)
-	url := models.UrlShort{}
+	url := models.URLShort{}
 
 	err := row.Scan(&url.ID, &url.URLAddress, &url.VisitCounts)
 	if err == sql.ErrNoRows {
@@ -97,5 +109,6 @@ func (d *postgres) Retrieve(u string) (*models.UrlShort, error) {
 	return &url, nil
 }
 
-//TODO Update visit counts when visited
-func (d *postgres) Update(enc string) error {return nil}
+// Update change the visit count from a record in the DB
+// TODO Update visit counts when visited
+func (d *Postgres) Update(enc string) error { return nil }
