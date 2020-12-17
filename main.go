@@ -14,12 +14,9 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("could not read configuration file %s: %v", *configFile, err)
 	}
-<<<<<<< HEAD
 
-	pgConn, err := postgres.NewConn(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Username, cfg.Postgres.Password,
-=======
 	pg, err := postgres.NewConn(cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Username, cfg.Postgres.Password,
->>>>>>> main
+
 		cfg.Postgres.Database, cfg.Postgres.SSLMode)
 	if err != nil {
 		logrus.Fatalf("could not establish connection: %v", err)
