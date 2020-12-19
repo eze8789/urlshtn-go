@@ -9,8 +9,7 @@ import (
 // Configuration support all the configuration to expose server and connect to different Backends
 type Configuration struct {
 	WebServer struct {
-		Host string `yaml:"host"`
-		Port string `yaml:"port"`
+		Addr string `yaml:"addr"`
 	} `yaml:"webserver"`
 	Postgres struct {
 		Host     string `yaml:"host"`
