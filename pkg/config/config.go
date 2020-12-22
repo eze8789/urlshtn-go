@@ -10,6 +10,7 @@ import (
 type Configuration struct {
 	WebServer struct {
 		Addr string `yaml:"addr"`
+		Port string `yaml:"port"`
 	} `yaml:"webserver"`
 	Postgres struct {
 		Host     string `yaml:"host"`
