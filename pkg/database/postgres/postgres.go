@@ -68,28 +68,28 @@ func (p *postgres) Insert(url string) (*int, error) {
 }
 
 // List return a slice of UrlShort struct
-func (p *postgres) List() ([]*models.URLShort, error) {
+func (p *postgres) List() (*[]models.URLShort, error) {
 	stmt := `SELECT * FROM url_shortener;`
 	rows, err := p.DB.Query(stmt)
-	if err == rows.Err() {
-		return nil, err
-	}
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var urls []*models.URLShort
+	var urls []models.URLShort
 	for rows.Next() {
-		url := &models.URLShort{}
+		url := models.URLShort{}
 		err = rows.Scan(&url.ID, &url.URLAddress, &url.VisitCounts)
 		if err != nil {
 			return nil, err
 		}
 		urls = append(urls, url)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-	return urls, nil
+	return &urls, nil
 }
 
 // Retrieve return a record from the DB
@@ -109,7 +109,7 @@ func (p *postgres) RetrieveURL(u string) (string, error) {
 }
 
 func (p *postgres) RetrieveInfo(u string) (*models.URLShort, error) {
-	stmt := `SELECT * FROM url_shortener WHERE url_address=$1;`
+	stmt := `SELECT * FROM url_shortener WHERE url_id = $1;`
 	row := p.DB.QueryRow(stmt, u)
 	url := models.URLShort{}
 
@@ -121,11 +121,8 @@ func (p *postgres) RetrieveInfo(u string) (*models.URLShort, error) {
 		return nil, err
 	}
 
+	fmt.Println(url)
 	return &url, nil
 }
-
-// Update change the visit count from a record in the DB
-// TODO Update visit counts when visited
-func (p *postgres) Update(enc string) error { return nil }
 
 func (p *postgres) Close() error { return p.DB.Close() }

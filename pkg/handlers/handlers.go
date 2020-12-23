@@ -21,7 +21,9 @@ type handler struct {
 func Routes(storage database.Storage) http.Handler {
 	rtr := mux.NewRouter()
 	h := handler{storage}
-	rtr.HandleFunc("/load", responseHand(h.loadURL))
+	rtr.HandleFunc("/load", responseHand(h.loadURL)).Methods(http.MethodPost)
+	rtr.HandleFunc("/list", responseHand(h.listURL)).Methods(http.MethodGet)
+	rtr.PathPrefix("/info/").HandlerFunc(responseHand(h.infoURL)).Methods(http.MethodGet)
 	rtr.PathPrefix("/").HandlerFunc(h.redirect).Methods(http.MethodGet)
 
 	return rtr
@@ -46,7 +48,7 @@ func responseHand(h func(io.Writer, *http.Request) (interface{}, int, error)) ht
 	}
 }
 
-func (h handler) loadURL(w io.Writer, r *http.Request) (interface{}, int, error) {
+func (h handler) loadURL(w io.Writer, r *http.Request) (interface{}, int, error) { // nolint
 	in := models.InOut{}
 
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
@@ -72,12 +74,38 @@ func (h handler) redirect(w http.ResponseWriter, r *http.Request) {
 		errResp := new(bytes.Buffer)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(errResp).Encode(response{Data: response{"URL not found"}})
-		w.Write(errResp.Bytes())
+		if err := json.NewEncoder(errResp).Encode(response{Data: response{"URL not found"}}); err != nil {
+			w.Write([]byte("URL not found")) // nolint
+			logrus.Errorf("could not encode json response")
+			return
+		}
+		w.Write(errResp.Bytes()) // nolint
 		logrus.Errorf("request from %s, ID %s not found", r.RemoteAddr, u)
 		return
 	}
 
 	logrus.Infof("redirect customer %s to %s", r.RemoteAddr, url)
 	http.Redirect(w, r, url, http.StatusPermanentRedirect)
+}
+
+func (h handler) listURL(w io.Writer, r *http.Request) (interface{}, int, error) { // nolint
+	urls, err := h.storage.List()
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	logrus.Infof("returning available address list to: %s", r.RemoteAddr)
+	return urls, http.StatusCreated, nil
+}
+
+func (h handler) infoURL(w io.Writer, r *http.Request) (interface{}, int, error) { // nolint
+	id := r.URL.Path[len("/info/"):]
+
+	url, err := h.storage.RetrieveInfo(id)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	logrus.Infof("presenting info to %s of the url: %s encoded with: %s", r.RemoteAddr, url.URLAddress, id)
+	return url, http.StatusCreated, nil
 }
