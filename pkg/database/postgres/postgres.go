@@ -32,7 +32,7 @@ func NewConn(host, port, username, password, dbase, ssloption string) (database.
 		return nil, err
 	}
 
-	err = createTable(db, "./configs/sql/create_url_shortener.sql")
+	err = createTable(db, "./create_url_shortener.sql")
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,6 @@ func (p *postgres) RetrieveInfo(u string) (*models.URLShort, error) {
 		return nil, err
 	}
 
-	fmt.Println(url)
 	return &url, nil
 }
 
