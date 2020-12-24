@@ -24,6 +24,7 @@ func main() {
 	logger := logrus.New()
 
 	configFile := flag.String("config", "./configs/app/config.yaml", "Choose configuration file")
+	flag.Parse()
 
 	cfg, err := config.GenerateConfig(*configFile)
 	if err != nil {
