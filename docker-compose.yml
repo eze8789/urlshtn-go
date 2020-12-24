@@ -1,5 +1,11 @@
 version: '3'
 services:
+  web_app:
+    image: urlshtn-go-alpine
+    restart: always
+    ports:
+    - 8080:8080
+
   postgres_db:
     image: postgres
     restart: always
@@ -7,5 +13,6 @@ services:
       POSTGRES_PASSWORD: '123Change'
       POSTGRES_USER: 'local-user'
       POSTGRES_DB: 'url_shortener'
+      ALLOW_IP_RANGE: 0.0.0.0/0
     ports:
       - 5432:5432
