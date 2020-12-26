@@ -3,7 +3,7 @@ webserver:
   addr: "0.0.0.0"
   port: "8080"
 postgres:
-  host: "172.19.0.2"
+  host: "urlshtn-go_postgres_db_1"
   port: "5432"
   database: "url_shortener"
   username: "local-user"
